@@ -3,20 +3,42 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { createStore} from 'redux';
+import {applyMiddleware, createStore} from 'redux';
 import counter from "./reducers";
+import rootReducer from "./reducers";
+import {Provider} from "react-redux";
+import thunk from "redux-thunk";
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-const store = createStore(counter)
+const loggerMiddleware = (store: any) => (next: any) => (action: any) => {
+    console.log("store", store);
+    console.log("action", action);
+    next(action);
+}
+/*
+    위의 함수를 풀어서 표현하면 이렇게 됨
+    똑같은 함수
+    const loggerMiddleware = function (store) {
+        return function (next) {
+            return function (action) {
+                // code
+            }
+        }
+    }
 
+* */
+const middleware = applyMiddleware(thunk, loggerMiddleware);
+const store = createStore(rootReducer, middleware);
 const render = () => root.render(
   <React.StrictMode>
-    <App value={store.getState()}
-        onIncrement={() => store.dispatch({ type: 'INCREMENT' })}
-        onDecrement={() => store.dispatch({ type: 'DECREMENT' })}/>
+      <Provider store={store}>
+          <App value={store.getState()}
+               onIncrement={() => store.dispatch({ type: 'INCREMENT' })}
+               onDecrement={() => store.dispatch({ type: 'DECREMENT' })}/>
+      </Provider>
   </React.StrictMode>
 );
 render();
